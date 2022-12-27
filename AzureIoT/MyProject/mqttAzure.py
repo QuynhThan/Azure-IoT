@@ -39,10 +39,12 @@ def getTempAndHumid(x):
     lastest_temperature = temperature['feeds'][0]
     messageId = last_id
     dt = datetime.datetime.now()
-    deviceId = "ESP8266 and DHT11"
+    device_name = "ESP8266 and DHT11"
     temperature = (float(lastest_temperature['field1'])*1.8) + 32
-    humidity = lastest_temperature['field2']
-    tmp = {'id': str(x),
+    humidity = float(lastest_temperature['field2'])
+    if x == 1:
+        humidity += 100
+    tmp = {'id': str(last_id),
            'datetime': str(dt),
            'messageId': str(messageId),
            'deviceId': str(device_id),
@@ -53,7 +55,8 @@ def getTempAndHumid(x):
 
 device_id = "cuoikyDevice1"  # Add device id
 iot_hub_name = "cuoikyIothub"  # Add iot hub name
-sas_token = "SharedAccessSignature sr=cuoikyIothub.azure-devices.net%2Fdevices%2FcuoikyDevice1&sig=vTk1cdsaaLW9VJzFpLQFASEcMmcumiDJYJ7k%2BBqmyGw%3D&se=1672069893"  # Add sas token string
+# Create a sas token of iot hub device
+sas_token = "SharedAccessSignature sr=cuoikyIothub.azure-devices.net%2Fdevices%2FcuoikyDevice1&sig=Ukj5dYfFI%2B4QkpeAj7SrL%2BSeRbrtjJlQm0jF%2Bs1pEZ4%3D&se=1672152561"  # Add sas token string
 client = mqtt.Client(client_id=device_id,
                      protocol=mqtt.MQTTv311,  clean_session=False)
 client.on_log = on_log
@@ -71,14 +74,14 @@ client.connect(iot_hub_name+".azure-devices.net", port=8883)
 #messageId = 0
 # Publish ========== Temp and humid get in thinkspeaks from arduino
 time.sleep(1)
-for x in range(10):
+for x in range(100):
     exp = datetime.datetime.utcnow()
     abcstring1 = getTempAndHumid(x)
     data_out1 = json.dumps(abcstring1)
     client.publish("devices/{device_id}/messages/events/".format(
         device_id=device_id), payload=data_out1, qos=1, retain=False)
     print("Publishing on devices/" + device_id + "/messages/events/", data_out1)
-    time.sleep(5)
+    time.sleep(20)
 
 # Subscribe
 client.on_message = on_message
